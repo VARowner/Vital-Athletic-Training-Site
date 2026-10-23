@@ -1,0 +1,11 @@
+
+@font-face {
+  font-family: 'Varela Round';
+  font-style: normal;
+  font-weight: 400;
+  src: url('/_ext/cdn2.editmysite.com/fonts/Varela_Round/regular.eot'); /* IE9 Compat Modes */
+  src: url('/_ext/cdn2.editmysite.com/fonts/Varela_Round/regular.eot') format('embedded-opentype'), /* IE6-IE8 */
+       url('/_ext/cdn2.editmysite.com/fonts/Varela_Round/regular.woff2') format('woff2'), /* Super Modern Browsers */
+       url('/_ext/cdn2.editmysite.com/fonts/Varela_Round/regular.woff') format('woff'), /* Modern Browsers */
+       url('/_ext/cdn2.editmysite.com/fonts/Varela_Round/regular.ttf') format('truetype'); /* Safari, Android, iOS */
+}

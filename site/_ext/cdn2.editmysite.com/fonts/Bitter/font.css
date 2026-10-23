@@ -1,0 +1,33 @@
+
+@font-face {
+  font-family: 'Bitter';
+  font-style: normal;
+  font-weight: 400;
+  src: url('/_ext/cdn2.editmysite.com/fonts/Bitter/regular.eot'); /* IE9 Compat Modes */
+  src: url('/_ext/cdn2.editmysite.com/fonts/Bitter/regular.eot') format('embedded-opentype'), /* IE6-IE8 */
+       url('/_ext/cdn2.editmysite.com/fonts/Bitter/regular.woff2') format('woff2'), /* Super Modern Browsers */
+       url('/_ext/cdn2.editmysite.com/fonts/Bitter/regular.woff') format('woff'), /* Modern Browsers */
+       url('/_ext/cdn2.editmysite.com/fonts/Bitter/regular.ttf') format('truetype'); /* Safari, Android, iOS */
+}
+
+@font-face {
+  font-family: 'Bitter';
+  font-style: normal;
+  font-weight: 700;
+  src: url('/_ext/cdn2.editmysite.com/fonts/Bitter/bold.eot'); /* IE9 Compat Modes */
+  src: url('/_ext/cdn2.editmysite.com/fonts/Bitter/bold.eot') format('embedded-opentype'), /* IE6-IE8 */
+       url('/_ext/cdn2.editmysite.com/fonts/Bitter/bold.woff2') format('woff2'), /* Super Modern Browsers */
+       url('/_ext/cdn2.editmysite.com/fonts/Bitter/bold.woff') format('woff'), /* Modern Browsers */
+       url('/_ext/cdn2.editmysite.com/fonts/Bitter/bold.ttf') format('truetype'); /* Safari, Android, iOS */
+}
+
+@font-face {
+  font-family: 'Bitter';
+  font-style: italic;
+  font-weight: 400;
+  src: url('/_ext/cdn2.editmysite.com/fonts/Bitter/italic.eot'); /* IE9 Compat Modes */
+  src: url('/_ext/cdn2.editmysite.com/fonts/Bitter/italic.eot') format('embedded-opentype'), /* IE6-IE8 */
+       url('/_ext/cdn2.editmysite.com/fonts/Bitter/italic.woff2') format('woff2'), /* Super Modern Browsers */
+       url('/_ext/cdn2.editmysite.com/fonts/Bitter/italic.woff') format('woff'), /* Modern Browsers */
+       url('/_ext/cdn2.editmysite.com/fonts/Bitter/italic.ttf') format('truetype'); /* Safari, Android, iOS */
+}
