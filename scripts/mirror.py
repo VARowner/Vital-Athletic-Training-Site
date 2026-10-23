@@ -52,7 +52,9 @@ OUT = Path("site")
 UA = "Mozilla/5.0 (compatible; vitalathletic-site-mirror/1.0)"
 
 # url(...) in CSS and inline styles; src/href/srcset/data-* attributes in HTML.
-CSS_URL = re.compile(r"url\(\s*(['\"]?)([^'\")]+)\1\s*\)", re.I)
+CSS_URL = re.compile(r"url\(\s*(?!&quot;)(['\"]?)([^'\")]+)\1\s*\)", re.I)
+# Inline styles written by Weebly quote URLs with HTML entities: url(&quot;/uploads/...&quot;)
+CSS_URL_ENTITY = re.compile(r"url\(\s*&quot;(.*?)&quot;\s*\)", re.I)
 CSS_IMPORT = re.compile(r"@import\s+(['\"])([^'\"]+)\1", re.I)
 ATTR_URL = re.compile(
     r"""(\s(?:src|href|data-src|data-original|poster)\s*=\s*)(["'])([^"']*)\2""", re.I
@@ -182,6 +184,7 @@ def rewrite_html(html: str, base: str) -> str:
     html = ATTR_URL.sub(attr, html)
     html = SRCSET.sub(srcset, html)
     # Inline styles and <style> blocks.
+    html = CSS_URL_ENTITY.sub(lambda m: f"url(&quot;{rewrite_ref(m.group(1), base)}&quot;)", html)
     html = CSS_URL.sub(lambda m: f"url({m.group(1)}{rewrite_ref(m.group(2), base)}{m.group(1)})", html)
     # Any remaining absolute references to the copied hosts (e.g. inside inline scripts / JSON).
     html = ABS_IN_TEXT.sub(lambda m: copy_asset(absolutize(m.group(0), base) or "") or m.group(0), html)
