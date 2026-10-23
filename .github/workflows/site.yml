@@ -1,0 +1,75 @@
+# Publishes the site in ./site to GitHub Pages on every push to main.
+#
+# ./site is a copy of the old Weebly site made by scripts/mirror.py. The copy is (re)made when:
+#   - ./site doesn't exist yet (the very first run), or
+#   - you run this workflow by hand (Actions → "Site" → Run workflow) with "refresh" ticked.
+# Re-copying overwrites ./site, so only do that while vitalathletic.com still points at Weebly.
+name: Site
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      refresh:
+        description: "Re-copy the site from the live Weebly site before publishing"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Decide whether to copy the old site
+        id: decide
+        run: |
+          if [ ! -f site/index.html ] || [ "${{ inputs.refresh }}" = "true" ]; then
+            echo "mirror=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "mirror=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/setup-python@v5
+        if: steps.decide.outputs.mirror == 'true'
+        with:
+          python-version: "3.12"
+
+      - name: Copy the site from Weebly
+        if: steps.decide.outputs.mirror == 'true'
+        run: python3 scripts/mirror.py
+
+      - name: Commit the copy
+        if: steps.decide.outputs.mirror == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
+          git add site
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "Copy site from Weebly"
+            git push
+          fi
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+      - id: deploy
+        uses: actions/deploy-pages@v4
