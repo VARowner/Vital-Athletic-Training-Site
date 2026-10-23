@@ -20,6 +20,11 @@ Only while `vitalathletic.com` still points at Weebly: Actions → **Site** → 
 - `www` CNAME → `varowner.github.io`
 - Custom domain is set in repo Settings → Pages (plus a `site/CNAME` file containing `vitalathletic.com`).
 
-## Known gaps
-- Contact and offer forms still post to Weebly's form handler. They stop working once Weebly is
-  cancelled, so they need a replacement before then.
+## Forms
+The contact and free-offer forms are sent by `static/assets/forms.js` to **Formspree**, which emails each
+submission and keeps a copy. Set `FORM_ENDPOINT` in that file to the Formspree form's URL. While it is
+blank, submitting opens a pre-filled email to mpitts@vitalathletic.com instead, so nothing is lost.
+The contact page map is a plain Google Maps embed.
+
+Edit anything in `static/`, then run `python3 scripts/mirror.py --finalize-only` (or just push — the copy
+step re-applies it on the next refresh).

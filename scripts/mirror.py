@@ -15,6 +15,11 @@ Maps stay external on purpose.
 Edits on top of the copy (kept small and listed here so they are easy to undo):
   - the blog is removed: nav/footer links dropped, /blog.html redirects to the home page
   - the "Website Design by My Personal Trainer Website" credit link is removed
+  - files in ./static are copied into ./site, and pages with a form load /assets/forms.js, which sends
+    submissions to Formspree instead of Weebly (see static/assets/forms.js)
+
+`python3 scripts/mirror.py --finalize-only` re-applies the last two steps to an existing ./site without
+re-downloading anything (use it after editing ./static).
 """
 from __future__ import annotations
 
@@ -208,7 +213,39 @@ REDIRECT_HTML = """<!doctype html><html><head><meta charset="utf-8"><title>Vital
 """
 
 
+FORMS_TAG = '<script src="/assets/forms.js" defer></script>'
+
+
+def finalize() -> None:
+    """Copy ./static into ./site and wire up the forms. Safe to run repeatedly."""
+    static = Path("static")
+    if static.is_dir():
+        shutil.copytree(static, OUT, dirs_exist_ok=True)
+    for page in OUT.glob("*.html"):
+        html = page.read_text("utf-8")
+        # Weebly's map widget is served by weebly.com; use a plain Google Maps embed at the same spot.
+        html, n = re.subn(
+            r"""src=(["'])(?:https?:)?//www\.weebly\.com/weebly/apps/generateMap\.php\?[^"']*?long=(-?[\d.]+)&(?:amp;)?lat=(-?[\d.]+)[^"']*\1""",
+            lambda m: f'src="https://maps.google.com/maps?q={m.group(3)},{m.group(2)}&z=15&output=embed" loading="lazy"',
+            html,
+        )
+        if n:
+            page.write_text(html, "utf-8")
+            print(f"map replaced: {page}")
+        html2 = re.sub(r'action="(?:https?:)?//www\.weebly\.com/weebly/apps/formSubmit\.php"', 'action="#"', html)
+        if html2 != html:
+            html = html2
+            page.write_text(html, "utf-8")
+        if re.search(r'<form[^>]+id="form-', html) and FORMS_TAG not in html:
+            html = re.sub(r"</body>", FORMS_TAG + "\n</body>", html, count=1, flags=re.I)
+            page.write_text(html, "utf-8")
+            print(f"forms wired: {page}")
+
+
 def main() -> int:
+    if "--finalize-only" in sys.argv:
+        finalize()
+        return 0
     if OUT.exists():
         shutil.rmtree(OUT)
     OUT.mkdir()
@@ -223,6 +260,7 @@ def main() -> int:
     # GitHub Pages serves 404.html for unknown paths; send people home rather than to a blank error.
     write("/404.html", REDIRECT_HTML.encode())
     (OUT / ".nojekyll").write_text("")  # serve folders starting with "_" (like _ext) as-is
+    finalize()
 
     copied = sum(1 for v in fetched.values() if v)
     print(f"\ncopied {copied} assets; {len(failures)} failures")
