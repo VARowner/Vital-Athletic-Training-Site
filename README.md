@@ -20,11 +20,11 @@ Only while `vitalathletic.com` still points at Weebly: Actions → **Site** → 
 - `www` CNAME → `varowner.github.io`
 - Custom domain is set in repo Settings → Pages (plus a `site/CNAME` file containing `vitalathletic.com`).
 
-## Forms
-The contact and free-offer forms are sent by `static/assets/forms.js` to **Formspree**, which emails each
-submission and keeps a copy. Set `FORM_ENDPOINT` in that file to the Formspree form's URL. While it is
-blank, submitting opens a pre-filled email to mpitts@vitalathletic.com instead, so nothing is lost.
-The contact page map is a plain Google Maps embed.
+## Forms (off for now)
+The contact and free-offer forms are switched off: each is replaced by an "Email mpitts@vitalathletic.com"
+button (`FORMS_ENABLED = False` in `scripts/mirror.py`), and the free-offer text points to that button instead of a form. To bring them back, set it to `True`, put a
+Formspree form URL in `FORM_ENDPOINT` in `static/assets/forms.js`, and re-run the copy (Actions →
+Site → Run workflow → refresh, while Weebly is still live). The contact page map is a plain Google Maps embed.
 
 Edit anything in `static/`, then run `python3 scripts/mirror.py --finalize-only` (or just push — the copy
 step re-applies it on the next refresh).

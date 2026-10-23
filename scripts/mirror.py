@@ -15,8 +15,10 @@ Maps stay external on purpose.
 Edits on top of the copy (kept small and listed here so they are easy to undo):
   - the blog is removed: nav/footer links dropped, /blog.html redirects to the home page
   - the "Website Design by My Personal Trainer Website" credit link is removed
-  - files in ./static are copied into ./site, and pages with a form load /assets/forms.js, which sends
-    submissions to Formspree instead of Weebly (see static/assets/forms.js)
+  - files in ./static are copied into ./site
+  - Weebly's forms are replaced with an "Email us" button (FORMS_ENABLED = False). Setting it to True
+    keeps the forms and loads /assets/forms.js, which sends them to Formspree instead of Weebly
+  - the contact page map uses a plain Google Maps embed instead of Weebly's map widget
 
 `python3 scripts/mirror.py --finalize-only` re-applies the last two steps to an existing ./site without
 re-downloading anything (use it after editing ./static).
@@ -204,6 +206,8 @@ def apply_site_edits(html: str) -> str:
     # Remove the template vendor's credit link.
     html = re.sub(r"<a[^>]*mypersonaltrainerwebsite\.com[^>]*>.*?</a>", "", html, flags=re.I | re.S)
     html = re.sub(r"Website Design by\s*", "", html, flags=re.I)
+    # Removing the credit link leaves "<br />&#8203;. ALL RIGHTS RESERVED" behind; tidy it.
+    html = html.replace("<br />&#8203;. ALL RIGHTS RESERVED", " ALL RIGHTS RESERVED")
     return html
 
 
@@ -214,6 +218,20 @@ REDIRECT_HTML = """<!doctype html><html><head><meta charset="utf-8"><title>Vital
 
 
 FORMS_TAG = '<script src="/assets/forms.js" defer></script>'
+FORMS_ENABLED = False
+# Styled inline to match the site's black pill buttons (Weebly's button CSS doesn't apply outside a form).
+EMAIL_BLOCK = (
+    '<div style="margin:10px 0 20px;">'
+    '<a href="mailto:mpitts@vitalathletic.com" style="display:inline-block;background:#000;color:#fff;'
+    "border:2px solid #000;border-radius:30px;padding:12px 28px;font-family:'Montserrat',sans-serif;"
+    'font-size:13px;letter-spacing:.05em;text-transform:uppercase;text-decoration:none;">'
+    "Email mpitts@vitalathletic.com</a></div>"
+)
+# Copy that mentions a form, reworded while forms are off.
+FORM_COPY_REWRITES = [
+    ("Enter your details in the form below and a friendly trainer",
+     "Email us using the button below and a friendly trainer"),
+]
 
 
 def finalize() -> None:
@@ -223,6 +241,8 @@ def finalize() -> None:
         shutil.copytree(static, OUT, dirs_exist_ok=True)
     for page in OUT.glob("*.html"):
         html = page.read_text("utf-8")
+        html_orig = html
+        html = apply_site_edits(html)
         # Weebly's map widget is served by weebly.com; use a plain Google Maps embed at the same spot.
         html, n = re.subn(
             r"""src=(["'])(?:https?:)?//www\.weebly\.com/weebly/apps/generateMap\.php\?[^"']*?long=(-?[\d.]+)&(?:amp;)?lat=(-?[\d.]+)[^"']*\1""",
@@ -230,16 +250,23 @@ def finalize() -> None:
             html,
         )
         if n:
-            page.write_text(html, "utf-8")
             print(f"map replaced: {page}")
-        html2 = re.sub(r'action="(?:https?:)?//www\.weebly\.com/weebly/apps/formSubmit\.php"', 'action="#"', html)
-        if html2 != html:
-            html = html2
-            page.write_text(html, "utf-8")
-        if re.search(r'<form[^>]+id="form-', html) and FORMS_TAG not in html:
-            html = re.sub(r"</body>", FORMS_TAG + "\n</body>", html, count=1, flags=re.I)
-            page.write_text(html, "utf-8")
-            print(f"forms wired: {page}")
+        # Forms are switched off for now (decided 2026-10-23): each Weebly form is replaced by an email
+        # button. To bring forms back, set FORMS_ENABLED = True (static/assets/forms.js sends to Formspree).
+        if FORMS_ENABLED:
+            html2 = re.sub(r'action="(?:https?:)?//www\.weebly\.com/weebly/apps/formSubmit\.php"', 'action="#"', html)
+            if re.search(r'<form[^>]+id="form-', html2) and FORMS_TAG not in html2:
+                html2 = re.sub(r"</body>", FORMS_TAG + "\n</body>", html2, count=1, flags=re.I)
+        else:
+            html2 = re.sub(r'<form\b[^>]*\bid="form-\d+"[^>]*>.*?</form>', EMAIL_BLOCK, html, flags=re.S | re.I)
+            html2 = html2.replace(FORMS_TAG + "\n", "").replace(FORMS_TAG, "")
+            for old, new in FORM_COPY_REWRITES:
+                html2 = html2.replace(old, new)
+            html2 = re.sub(r'<div style="margin:10px 0 20px;"><a class="wsite-button[^"]*" href="mailto:[^"]*">.*?</a></div>',
+                           EMAIL_BLOCK, html2, flags=re.S)
+        if html2 != html_orig:
+            page.write_text(html2, "utf-8")
+            print(f"updated: {page}")
 
 
 def main() -> int:
